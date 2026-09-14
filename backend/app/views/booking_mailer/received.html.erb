@@ -1,0 +1,14 @@
+<h2>Thanks, <%= @booking.user.name %></h2>
+
+<p>We have your booking for <strong><%= @course.title %></strong>.</p>
+
+<ul>
+  <li>Dates: <%= @schedule.start_date.strftime("%d %b") %> – <%= @schedule.end_date.strftime("%d %b %Y") %></li>
+  <li>Participants: <%= @booking.participants %></li>
+  <li>Total: <%= number_to_currency(@booking.total_cents / 100.0, unit: "Rp ", delimiter: ".", precision: 0) %></li>
+</ul>
+
+<p>
+  Your seats are held. We will email you again once an instructor has confirmed
+  the dates — nothing is charged until then.
+</p>

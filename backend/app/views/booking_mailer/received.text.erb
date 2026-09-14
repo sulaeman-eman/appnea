@@ -1,0 +1,10 @@
+Thanks, <%= @booking.user.name %>
+
+We have your booking for <%= @course.title %>.
+
+Dates: <%= @schedule.start_date.strftime("%d %b") %> - <%= @schedule.end_date.strftime("%d %b %Y") %>
+Participants: <%= @booking.participants %>
+Total: Rp <%= number_with_delimiter(@booking.total_cents / 100, delimiter: ".") %>
+
+Your seats are held. We will email you again once an instructor has confirmed
+the dates - nothing is charged until then.

@@ -1,0 +1,11 @@
+<h2>You are confirmed, <%= @booking.user.name %></h2>
+
+<p><strong><%= @course.title %></strong> is going ahead.</p>
+
+<ul>
+  <li>Dates: <%= @schedule.start_date.strftime("%d %b") %> – <%= @schedule.end_date.strftime("%d %b %Y") %></li>
+  <li>Instructor: <%= @schedule.instructor&.name || "To be assigned" %></li>
+  <li>Participants: <%= @booking.participants %></li>
+</ul>
+
+<p>Bring your certification card if you have one, plus a mask and a towel. See you in the water.</p>

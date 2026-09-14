@@ -1,0 +1,10 @@
+You are confirmed, <%= @booking.user.name %>
+
+<%= @course.title %> is going ahead.
+
+Dates: <%= @schedule.start_date.strftime("%d %b") %> - <%= @schedule.end_date.strftime("%d %b %Y") %>
+Instructor: <%= @schedule.instructor&.name || "To be assigned" %>
+Participants: <%= @booking.participants %>
+
+Bring your certification card if you have one, plus a mask and a towel.
+See you in the water.

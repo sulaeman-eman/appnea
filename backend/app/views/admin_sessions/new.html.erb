@@ -1,0 +1,14 @@
+<h1>Appnea admin</h1>
+<p class="sub">Sign in with an admin account.</p>
+
+<%= form_with url: admin_login_path, method: :post do |f| %>
+  <%= hidden_field_tag :next, params[:next] if params[:next].present? %>
+
+  <label for="email">Email</label>
+  <%= email_field_tag :email, params[:email], id: "email", required: true, autocomplete: "username" %>
+
+  <label for="password">Password</label>
+  <%= password_field_tag :password, nil, id: "password", required: true, autocomplete: "current-password" %>
+
+  <button type="submit">Sign in</button>
+<% end %>

@@ -1,0 +1,21 @@
+/.bundle
+
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/.keep
+
+/public/assets
+
+# Secrets. credentials.yml.enc IS committed — it is encrypted and useless
+# without these keys, which never are.
+/config/master.key
+/config/credentials/*.key
+
+.env
+.env.*
+!.env.example

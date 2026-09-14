@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Runs the Rails API and the Express SSR server together.
+# Ctrl-C stops both.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+root="$PWD"
+
+cleanup() { kill 0 2>/dev/null || true; }
+trap cleanup EXIT INT TERM
+
+( cd "$root/backend" && mise exec -- bin/rails server -p 3000 ) &
+( cd "$root/web" && npm run dev ) &
+
+wait

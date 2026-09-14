@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Appnea admin</title>
+    <%= csrf_meta_tags %>
+    <style>
+      body { margin:0; font-family: ui-sans-serif, system-ui, sans-serif; background:#04283f; color:#10242f;
+             display:flex; align-items:center; justify-content:center; min-height:100vh; }
+      .box { background:#fff; padding:32px; border-radius:14px; width:min(380px, 90vw); }
+      h1 { margin:0 0 4px; font-size:1.3rem; }
+      p.sub { margin:0 0 22px; color:#5d7383; font-size:.9rem; }
+      label { display:block; font-size:.86rem; font-weight:600; margin-bottom:6px; }
+      input { width:100%; padding:11px 13px; border:1px solid #dfe6ea; border-radius:10px; font:inherit; margin-bottom:16px; }
+      button { width:100%; padding:12px; border:0; border-radius:999px; background:#12a8a0; color:#fff;
+               font:inherit; font-weight:600; cursor:pointer; }
+      .alert { background:#fdeceb; border:1px solid #f0c2bd; color:#952b16; padding:10px 12px;
+               border-radius:10px; font-size:.88rem; margin-bottom:16px; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <% if flash[:alert] %><div class="alert"><%= flash[:alert] %></div><% end %>
+      <%= yield %>
+    </div>
+  </body>
+</html>
