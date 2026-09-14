@@ -1,14 +1,35 @@
 class TripBlueprint < Blueprinter::Base
   identifier :id
 
-  fields :slug, :title, :destination, :start_date, :end_date, :capacity,
-    :price_cents, :currency, :summary
+  fields :slug, :start_date, :end_date, :capacity, :price_cents, :currency
+
+  field :title do |trip, options|
+    trip.translated(:title, options[:locale])
+  end
+
+  field :destination do |trip, options|
+    trip.translated(:destination, options[:locale])
+  end
+
+  field :summary do |trip, options|
+    trip.translated(:summary, options[:locale])
+  end
+
+  field :available_locales do |trip|
+    trip.translated_locales
+  end
 
   field :cover_image_url do |trip|
-    trip.cover_image.attached? ? Rails.application.routes.url_helpers.rails_blob_path(trip.cover_image, only_path: true) : nil
+    trip.cover_image_url(:card)
   end
 
   view :detail do
-    field :description
+    field :description do |trip, options|
+      trip.translated(:description, options[:locale])
+    end
+
+    field :cover_image_url do |trip|
+      trip.cover_image_url(:hero)
+    end
   end
 end

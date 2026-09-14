@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_14_083314) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_14_104635) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -48,11 +48,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_083314) do
     t.datetime "created_at", null: false
     t.text "excerpt", default: "", null: false
     t.datetime "published_at"
+    t.virtual "searchable", type: :tsvector, as: "(((setweight(to_tsvector('english'::regconfig, (COALESCE(title, ''::character varying))::text), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, (COALESCE(category, ''::character varying))::text), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(excerpt, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(body, ''::text)), 'C'::\"char\"))", stored: true
     t.string "slug", null: false
     t.string "title", null: false
+    t.jsonb "translations", default: {}, null: false
     t.datetime "updated_at", null: false
     t.index ["category"], name: "index_articles_on_category"
     t.index ["published_at"], name: "index_articles_on_published_at"
+    t.index ["searchable"], name: "index_articles_on_searchable", using: :gin
     t.index ["slug"], name: "index_articles_on_slug", unique: true
   end
 
@@ -84,11 +87,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_083314) do
     t.string "level", null: false
     t.integer "price_cents", default: 0, null: false
     t.boolean "published", default: false, null: false
+    t.virtual "searchable", type: :tsvector, as: "(((setweight(to_tsvector('english'::regconfig, (COALESCE(title, ''::character varying))::text), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, (COALESCE(level, ''::character varying))::text), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(summary, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(description, ''::text)), 'C'::\"char\"))", stored: true
     t.string "slug", null: false
     t.text "summary", default: "", null: false
     t.string "title", null: false
+    t.jsonb "translations", default: {}, null: false
     t.datetime "updated_at", null: false
     t.index ["published"], name: "index_courses_on_published"
+    t.index ["searchable"], name: "index_courses_on_searchable", using: :gin
     t.index ["slug"], name: "index_courses_on_slug", unique: true
     t.check_constraint "duration_days > 0", name: "courses_duration_positive"
     t.check_constraint "price_cents >= 0", name: "courses_price_non_negative"
@@ -138,6 +144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_14_083314) do
     t.date "start_date", null: false
     t.text "summary", default: "", null: false
     t.string "title", null: false
+    t.jsonb "translations", default: {}, null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_trips_on_slug", unique: true
     t.index ["start_date"], name: "index_trips_on_start_date"

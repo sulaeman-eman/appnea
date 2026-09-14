@@ -184,11 +184,35 @@ Security decisions, and why:
   the same wording as a wrong password, so the form cannot be used to work out
   which accounts are admins.
 
-### Phase 4 — Polish (next)
-- i18n EN/ID (tourists + local market)
-- Postgres full-text search over courses and articles (Elasticsearch is overkill here)
-- Image variants via ActiveStorage
-- Real seed content
+### Phase 4 — Polish (done)
+- [x] i18n EN/ID across the UI and the content itself
+- [x] Postgres full-text search over courses and articles
+- [x] Image variants via ActiveStorage and libvips
+- [x] Real seed content, English with Indonesian translations
+- [x] 154 backend specs green, rubocop clean, tsc clean, production build verified
+
+How the translation works: a `translations` jsonb column holds per-locale
+overrides, shaped `{"id": {"title": "..."}}`, and anything missing falls back to
+the base column. That means a half-translated record still renders completely
+instead of showing gaps, and adding a third language is data rather than a
+migration. Admins edit the JSON in Avo. The locale comes from `?locale=`, then a
+cookie, then `Accept-Language`, and is resolved on the server before rendering so
+there is no flash of English and crawlers get the right `<html lang>`.
+
+Search uses a stored generated `tsvector` column with a GIN index, so it stays in
+step with the row without a trigger or a callback to forget. Weights put a title
+hit above a body hit, and `websearch_to_tsquery` parses what people actually type
+without raising on malformed input. Results are ranked with `ts_rank_cd`.
+
+Images are attached with two named variants: `card` (800x533) and `hero`
+(1800x900), both WebP, cropped with `resize_to_fill` so a portrait upload does
+not ruin a grid. Active Storage runs in proxy mode rather than redirect mode, so
+the bytes come through the Express origin instead of pointing the browser at the
+Rails host, and Express forwards `/rails/*` alongside `/api/*`.
+
+Seed images are generated gradients, not photography. They exist so the layout
+can be judged with images in place, and they look obviously synthetic on purpose:
+nobody should mistake seed data for real content and ship it.
 
 ---
 
@@ -202,6 +226,16 @@ Security decisions, and why:
 - **No Docker** — not installed; native services instead
 - **Payment deferred** — schema hook only
 
-## 7. Out of scope (MVP)
+## 7. Known limitations
+
+- Full-text search uses the `english` dictionary for both languages. Indonesian
+  content is still found, but without stemming, so "penyelam" will not match
+  "menyelam". A second generated column with a `simple` or Indonesian dictionary
+  would fix it when the Indonesian catalogue is large enough to warrant one.
+- Seed cover images are generated gradients, not photographs.
+- Only the four courses, two trips and three published articles are translated;
+  a new record starts English-only until someone fills in `translations`.
+
+## 8. Out of scope (MVP)
 
 Payment gateway, realtime chat, mobile app, multi-tenant / multi-school support.

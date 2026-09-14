@@ -1,17 +1,25 @@
 import { useRouteState } from '../data'
+import { useLocale } from '../locale'
 import { ErrorState, Loading } from '../components/states'
 import type { TripDetail } from '~/shared/types'
 import { formatDateRange, formatPrice } from '~/shared/format'
 
 export default function TripDetailPage() {
   const { data, error, loading } = useRouteState()
+  const { t } = useLocale()
   const trip = (data as { trip: TripDetail } | null)?.trip
 
   if (error) return <ErrorState message={error} />
-  if (loading || !trip) return <Loading what="trip" />
+  if (loading || !trip) return <Loading />
 
   return (
     <>
+      {trip.coverImageUrl && (
+        <div className="hero-image">
+          <img src={trip.coverImageUrl} alt="" />
+        </div>
+      )}
+
       <div className="page-head">
         <div className="wrap">
           <span className="tag">{trip.destination}</span>
@@ -30,16 +38,16 @@ export default function TripDetailPage() {
         <aside className="facts">
           <dl>
             <div>
-              <dt>Dates</dt>
+              <dt>{t('trips.dates')}</dt>
               <dd>{formatDateRange(trip.startDate, trip.endDate)}</dd>
             </div>
             <div>
-              <dt>Price</dt>
+              <dt>{t('courses.price')}</dt>
               <dd>{formatPrice(trip.priceCents, trip.currency)}</dd>
             </div>
             <div>
-              <dt>Group size</dt>
-              <dd>Up to {trip.capacity}</dd>
+              <dt>{t('trips.groupSize')}</dt>
+              <dd>{t('trips.upTo')} {trip.capacity}</dd>
             </div>
           </dl>
         </aside>

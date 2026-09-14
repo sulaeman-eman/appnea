@@ -11,6 +11,7 @@ import type {
  */
 export interface RequestContext {
   token?: string | null
+  locale?: string | null
 }
 
 const baseUrl = (): string =>
@@ -23,6 +24,12 @@ export class ApiError extends Error {
   }
 }
 
+/** Appends ?locale= so the API returns the right translation for this visitor. */
+function withLocale(path: string, locale?: string | null): string {
+  if (!locale) return path
+  return `${path}${path.includes('?') ? '&' : '?'}locale=${encodeURIComponent(locale)}`
+}
+
 async function request<T>(method: string, path: string, options: {
   ctx?: RequestContext
   body?: unknown
@@ -31,7 +38,7 @@ async function request<T>(method: string, path: string, options: {
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
   if (options.ctx?.token) headers.Authorization = `Bearer ${options.ctx.token}`
 
-  const response = await fetch(`${baseUrl()}/api${path}`, {
+  const response = await fetch(`${baseUrl()}/api${withLocale(path, options.ctx?.locale)}`, {
     method,
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -72,6 +79,11 @@ export const api = {
   articles: (ctx?: RequestContext) => get<{ articles: Article[]; meta: Meta }>('/articles', ctx),
   article: (slug: string, ctx?: RequestContext) =>
     get<{ article: ArticleDetail }>(`/articles/${encodeURIComponent(slug)}`, ctx),
+
+  search: (query: string, ctx?: RequestContext) =>
+    get<{ query: string; courses: Course[]; articles: Article[]; total: number }>(
+      `/search?q=${encodeURIComponent(query)}`, ctx,
+    ),
 
   me: (ctx?: RequestContext) => get<{ user: User }>('/auth/me', ctx),
   bookings: (ctx?: RequestContext) => get<{ bookings: Booking[] }>('/bookings', ctx),

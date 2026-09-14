@@ -1,13 +1,31 @@
 class ArticleBlueprint < Blueprinter::Base
   identifier :id
 
-  fields :slug, :title, :excerpt, :category, :published_at
+  fields :slug, :category, :published_at
+
+  field :title do |article, options|
+    article.translated(:title, options[:locale])
+  end
+
+  field :excerpt do |article, options|
+    article.translated(:excerpt, options[:locale])
+  end
+
+  field :available_locales do |article|
+    article.translated_locales
+  end
 
   field :cover_image_url do |article|
-    article.cover_image.attached? ? Rails.application.routes.url_helpers.rails_blob_path(article.cover_image, only_path: true) : nil
+    article.cover_image_url(:card)
   end
 
   view :detail do
-    field :body
+    field :body do |article, options|
+      article.translated(:body, options[:locale])
+    end
+
+    field :cover_image_url do |article|
+      article.cover_image_url(:hero)
+    end
   end
 end

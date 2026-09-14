@@ -11,7 +11,7 @@ module Api
       schedules = paginate(scope)
 
       render json: {
-        schedules: ScheduleBlueprint.render_as_hash(schedules, view: :with_course),
+        schedules: ScheduleBlueprint.render_as_hash(schedules, view: :with_course, locale: current_locale),
         meta: meta_for(scope, schedules)
       }
     rescue Date::Error
@@ -20,7 +20,7 @@ module Api
 
     def show
       schedule = Schedule.joins(:course).merge(Course.published).find(params[:id])
-      render json: { schedule: ScheduleBlueprint.render_as_hash(schedule, view: :with_course) }
+      render json: { schedule: ScheduleBlueprint.render_as_hash(schedule, view: :with_course, locale: current_locale) }
     end
   end
 end

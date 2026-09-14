@@ -1,12 +1,17 @@
-export function Loading({ what = 'page' }: { what?: string }) {
-  return <div className="state">Loading {what}…</div>
+import { useLocale } from '../locale'
+
+export function Loading({ what }: { what?: string }) {
+  const { t } = useLocale()
+  return <div className="state">{t('state.loading')}{what ? ` ${what}` : ''}...</div>
 }
 
 export function ErrorState({ message }: { message: string }) {
+  const { t } = useLocale()
+
   return (
     <div className="state error">
       <p>{message}</p>
-      <p>Try reloading — if it keeps happening the API may be down.</p>
+      <p>{t('state.errorRetry')}</p>
     </div>
   )
 }

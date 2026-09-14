@@ -1,19 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useRouteState } from '../data'
+import { useLocale } from '../locale'
 import { Empty, ErrorState, Loading } from '../components/states'
 import { api } from '~/shared/api'
 import type { Booking } from '~/shared/types'
+import type { TranslationKey } from '~/shared/i18n'
 import { formatDateRange, formatPrice } from '~/shared/format'
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Awaiting confirmation',
-  confirmed: 'Confirmed',
-  cancelled: 'Cancelled',
+const STATUS_KEY: Record<string, TranslationKey> = {
+  pending: 'bookings.pending',
+  confirmed: 'bookings.confirmed',
+  cancelled: 'bookings.cancelled',
 }
 
 export default function Bookings() {
   const { data, error, loading } = useRouteState()
+  const { t } = useLocale()
   const [bookings, setBookings] = useState<Booking[] | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -29,7 +32,7 @@ export default function Bookings() {
       const { booking } = await api.cancelBooking(id)
       setBookings((list ?? []).map((item) => (item.id === id ? booking : item)))
     } catch {
-      setActionError('Could not cancel that booking. Refresh and try again.')
+      setActionError(t('bookings.cancelFailed'))
     } finally {
       setBusyId(null)
     }
@@ -39,20 +42,18 @@ export default function Bookings() {
     <>
       <div className="page-head">
         <div className="wrap">
-          <h1>Your bookings</h1>
-          <p>Seats are held as soon as you book. An instructor confirms the dates by email.</p>
+          <h1>{t('bookings.title')}</h1>
+          <p>{t('bookings.lead')}</p>
         </div>
       </div>
 
       <section className="block">
         <div className="wrap">
           {error && <ErrorState message={error} />}
-          {loading && !list && <Loading what="bookings" />}
+          {loading && !list && <Loading what={t('nav.bookings').toLowerCase()} />}
           {actionError && <p className="form-error">{actionError}</p>}
 
-          {list && list.length === 0 && (
-            <Empty message="No bookings yet." />
-          )}
+          {list && list.length === 0 && <Empty message={t('bookings.empty')} />}
 
           {list && list.length > 0 && (
             <div className="schedule-list">
@@ -60,29 +61,30 @@ export default function Bookings() {
                 <div key={booking.id} className="schedule-row">
                   <div>
                     <div className="when">
-                      <Link to={`/courses/${booking.schedule.course.slug}`}>{booking.schedule.course.title}</Link>
+                      <Link to={`/courses/${booking.schedule.course.slug}`}>
+                        {booking.schedule.course.title}
+                      </Link>
                     </div>
                     <div className="who">
                       {formatDateRange(booking.schedule.startDate, booking.schedule.endDate)}
-                      {' · '}
-                      {booking.participants} {booking.participants === 1 ? 'person' : 'people'}
-                      {' · '}
+                      {' - '}
+                      {booking.participants}{' '}
+                      {booking.participants === 1 ? t('bookings.person') : t('bookings.people')}
+                      {' - '}
                       {formatPrice(booking.totalCents, booking.schedule.course.currency)}
                     </div>
                   </div>
 
                   <div>
                     <span className={`seats ${booking.status === 'cancelled' ? 'none' : ''}`}>
-                      {STATUS_LABEL[booking.status] ?? booking.status}
+                      {t(STATUS_KEY[booking.status] ?? 'bookings.pending')}
                     </span>
                     {booking.status !== 'cancelled' && (
                       <>
                         {' '}
-                        <button
-                          type="button" className="link-button"
-                          onClick={() => cancel(booking.id)} disabled={busyId === booking.id}
-                        >
-                          {busyId === booking.id ? 'Cancelling…' : 'Cancel'}
+                        <button type="button" className="link-button"
+                          onClick={() => cancel(booking.id)} disabled={busyId === booking.id}>
+                          {busyId === booking.id ? t('bookings.cancelling') : t('bookings.cancel')}
                         </button>
                       </>
                     )}

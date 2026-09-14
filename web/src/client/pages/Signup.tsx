@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../auth'
+import { useLocale } from '../locale'
 import { ApiError } from '~/shared/api'
 
 export default function Signup() {
   const { signup } = useAuth()
+  const { t } = useLocale()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -23,8 +25,8 @@ export default function Signup() {
     } catch (caught) {
       setError(
         caught instanceof ApiError && caught.status === 422
-          ? 'Check the form — that email may already be registered, or the password is under 8 characters.'
-          : 'Could not create the account right now. Try again in a moment.',
+          ? t('auth.signupInvalid')
+          : t('auth.signupFailed'),
       )
     } finally {
       setBusy(false)
@@ -33,36 +35,35 @@ export default function Signup() {
 
   return (
     <div className="wrap form-page">
-      <h1>Create an account</h1>
+      <h1>{t('auth.createAccount')}</h1>
       <form onSubmit={submit} className="form">
         {error && <p className="form-error">{error}</p>}
 
         <label>
-          Name
+          {t('auth.name')}
           <input value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
         </label>
 
         <label>
-          Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+          {t('auth.email')}
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            required autoComplete="email" />
         </label>
 
         <label>
-          Password
-          <input
-            type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            required minLength={8} autoComplete="new-password"
-          />
-          <small>At least 8 characters.</small>
+          {t('auth.password')}
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            required minLength={8} autoComplete="new-password" />
+          <small>{t('auth.passwordHint')}</small>
         </label>
 
         <button type="submit" className="button" disabled={busy}>
-          {busy ? 'Creating…' : 'Create account'}
+          {busy ? t('auth.creating') : t('auth.createAccount')}
         </button>
       </form>
 
       <p className="form-foot">
-        Already have an account? <Link to="/login">Sign in</Link>.
+        {t('auth.haveAccount')} <Link to="/login">{t('auth.signIn')}</Link>
       </p>
     </div>
   )

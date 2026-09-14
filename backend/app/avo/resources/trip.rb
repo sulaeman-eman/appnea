@@ -22,5 +22,8 @@ class Avo::Resources::Trip < Avo::BaseResource
     field :summary, as: :textarea, hide_on: :index
     field :description, as: :textarea, hide_on: :index
     field :cover_image, as: :file, is_image: true, hide_on: :index
+
+    field :translations, as: :code, language: "javascript", hide_on: :index,
+      help: %(Per-locale overrides, e.g. {"id": {"title": "...", "summary": "..."}}.)
   end
 end

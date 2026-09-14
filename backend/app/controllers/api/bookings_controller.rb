@@ -7,7 +7,7 @@ module Api
         .includes(schedule: %i[course instructor])
         .order(created_at: :desc)
 
-      render json: { bookings: BookingBlueprint.render_as_hash(bookings) }
+      render json: { bookings: BookingBlueprint.render_as_hash(bookings, locale: current_locale) }
     end
 
     def create
@@ -21,7 +21,7 @@ module Api
       ).call
 
       if result.success?
-        render json: { booking: BookingBlueprint.render_as_hash(result.booking) }, status: :created
+        render json: { booking: BookingBlueprint.render_as_hash(result.booking, locale: current_locale) }, status: :created
       else
         render json: { error: "booking_failed", detail: result.error }, status: :unprocessable_content
       end
@@ -34,7 +34,7 @@ module Api
       result = Bookings::Cancel.new(booking: booking).call
 
       if result.success?
-        render json: { booking: BookingBlueprint.render_as_hash(booking.reload) }
+        render json: { booking: BookingBlueprint.render_as_hash(booking.reload, locale: current_locale) }
       else
         render json: { error: "cancel_failed", detail: result.error }, status: :unprocessable_content
       end

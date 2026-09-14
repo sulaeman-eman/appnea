@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   # Public JSON API consumed by the Express BFF.
   namespace :api do
     get "health", to: "health#show"
+    get "search", to: "search#index"
 
     # Auth. The Express BFF calls these and keeps the token in an httpOnly
     # cookie; the browser never sees it.

@@ -1,5 +1,11 @@
 class Article < ApplicationRecord
-  has_one_attached :cover_image
+  include Translatable
+  include HasCoverImage
+
+  translates :title, :excerpt, :body
+
+  include Searchable
+
 
   before_validation :generate_slug, on: :create
 

@@ -2,9 +2,20 @@ class Instructor < ApplicationRecord
   belongs_to :user, optional: true
 
   has_many :schedules, dependent: :nullify
-  has_one_attached :photo
+  has_one_attached :photo do |attachable|
+    attachable.variant :avatar, resize_to_fill: [ 600, 600 ], format: :webp, saver: { quality: 80 }
+  end
+
 
   validates :name, presence: true
+
+  def photo_url
+    return nil unless photo.attached?
+
+    Rails.application.routes.url_helpers.rails_storage_proxy_path(
+      photo.variant(:avatar), only_path: true
+    )
+  end
 
   scope :ordered, -> { order(:display_order, :name) }
 

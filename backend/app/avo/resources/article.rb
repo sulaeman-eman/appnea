@@ -18,5 +18,8 @@ class Avo::Resources::Article < Avo::BaseResource
     field :excerpt, as: :textarea, hide_on: :index
     field :body, as: :textarea, hide_on: :index
     field :cover_image, as: :file, is_image: true, hide_on: :index
+
+    field :translations, as: :code, language: "javascript", hide_on: :index,
+      help: %(Per-locale overrides, e.g. {"id": {"title": "...", "body": "..."}}.)
   end
 end

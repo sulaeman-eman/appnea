@@ -23,6 +23,9 @@ class Avo::Resources::Course < Avo::BaseResource
     field :description, as: :textarea, hide_on: :index
     field :cover_image, as: :file, is_image: true, hide_on: :index
 
+    field :translations, as: :code, language: "javascript", hide_on: :index,
+      help: %(Per-locale overrides, e.g. {"id": {"title": "...", "summary": "..."}}. Anything omitted falls back to the English column above.)
+
     field :schedules, as: :has_many
   end
 end

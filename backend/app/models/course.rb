@@ -1,8 +1,14 @@
 class Course < ApplicationRecord
+  include Translatable
+  include HasCoverImage
+
+  translates :title, :summary, :description, :level
+
+  include Searchable
+
   enum :agency, { aida: 0, ssi: 1, molchanovs: 2 }, default: :aida, validate: true
 
   has_many :schedules, dependent: :restrict_with_error
-  has_one_attached :cover_image
 
   before_validation :generate_slug, on: :create
 

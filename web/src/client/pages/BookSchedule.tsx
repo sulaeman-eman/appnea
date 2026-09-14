@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { useRouteState } from '../data'
+import { useLocale } from '../locale'
 import { ErrorState, Loading } from '../components/states'
 import { api, ApiError } from '~/shared/api'
 import type { ScheduleWithCourse } from '~/shared/types'
@@ -8,6 +9,7 @@ import { formatDateRange, formatPrice } from '~/shared/format'
 
 export default function BookSchedule() {
   const { data, error, loading } = useRouteState()
+  const { t } = useLocale()
   const schedule = (data as { schedule: ScheduleWithCourse } | null)?.schedule
   const navigate = useNavigate()
 
@@ -17,7 +19,7 @@ export default function BookSchedule() {
   const [busy, setBusy] = useState(false)
 
   if (error) return <ErrorState message={error} />
-  if (loading || !schedule) return <Loading what="schedule" />
+  if (loading || !schedule) return <Loading />
 
   const soldOut = schedule.seatsAvailable <= 0
 
@@ -39,9 +41,7 @@ export default function BookSchedule() {
       // The seat count can change between page load and submit, so the server's
       // reason is more accurate than anything we could infer here.
       setFormError(
-        caught instanceof ApiError
-          ? (caught.detail ?? 'That booking could not be completed.')
-          : 'Something went wrong. Try again in a moment.',
+        caught instanceof ApiError ? (caught.detail ?? t('state.generic')) : t('state.generic'),
       )
     } finally {
       setBusy(false)
@@ -50,57 +50,55 @@ export default function BookSchedule() {
 
   return (
     <div className="wrap form-page">
-      <h1>Book {schedule.course.title}</h1>
+      <h1>{t('booking.title')} {schedule.course.title}</h1>
 
       <div className="facts" style={{ marginBottom: 24 }}>
         <dl>
           <div>
-            <dt>Dates</dt>
+            <dt>{t('trips.dates')}</dt>
             <dd>{formatDateRange(schedule.startDate, schedule.endDate)}</dd>
           </div>
           <div>
-            <dt>Instructor</dt>
-            <dd>{schedule.instructor?.name ?? 'To be assigned'}</dd>
+            <dt>{t('booking.instructor')}</dt>
+            <dd>{schedule.instructor?.name ?? t('schedule.tbd')}</dd>
           </div>
           <div>
-            <dt>Seats left</dt>
-            <dd>{schedule.seatsAvailable} of {schedule.capacity}</dd>
+            <dt>{t('booking.seatsLeft')}</dt>
+            <dd>{schedule.seatsAvailable} {t('schedule.of')} {schedule.capacity}</dd>
           </div>
           <div>
-            <dt>Price per person</dt>
+            <dt>{t('booking.perPerson')}</dt>
             <dd>{formatPrice(schedule.course.priceCents, schedule.course.currency)}</dd>
           </div>
         </dl>
       </div>
 
       {soldOut ? (
-        <p className="form-error">This date is fully booked. Pick another from the course page.</p>
+        <p className="form-error">{t('booking.soldOut')}</p>
       ) : (
         <form onSubmit={submit} className="form">
           {formError && <p className="form-error">{formError}</p>}
 
           <label>
-            Participants
-            <input
-              type="number" min={1} max={schedule.seatsAvailable} value={participants}
-              onChange={(e) => setParticipants(Number(e.target.value))} required
-            />
+            {t('booking.participants')}
+            <input type="number" min={1} max={schedule.seatsAvailable} value={participants}
+              onChange={(e) => setParticipants(Number(e.target.value))} required />
           </label>
 
           <label>
-            Anything we should know?
+            {t('booking.notes')}
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
-            <small>Experience level, medical notes, who you are diving with.</small>
+            <small>{t('booking.notesHint')}</small>
           </label>
 
           <p className="total">
-            Total: {formatPrice(schedule.course.priceCents * participants, schedule.course.currency)}
+            {t('booking.total')}: {formatPrice(schedule.course.priceCents * participants, schedule.course.currency)}
           </p>
 
           <button type="submit" className="button" disabled={busy}>
-            {busy ? 'Requesting…' : 'Request booking'}
+            {busy ? t('booking.submitting') : t('booking.submit')}
           </button>
-          <small>Your seats are held right away. Nothing is charged until an instructor confirms.</small>
+          <small>{t('booking.hold')}</small>
         </form>
       )}
     </div>

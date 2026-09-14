@@ -4,6 +4,23 @@ module Api
 
     private
 
+    # ?locale= wins, then Accept-Language, then English. Anything outside the
+    # allowlist is ignored rather than passed through, so the value can be
+    # dropped straight into a translations lookup.
+    def current_locale
+      @current_locale ||= begin
+        requested = params[:locale].presence || preferred_locale_from_header
+        Translatable::LOCALES.include?(requested) ? requested : Translatable::DEFAULT_LOCALE
+      end
+    end
+
+    def preferred_locale_from_header
+      request.headers["Accept-Language"].to_s
+        .split(",")
+        .map { |part| part.split(";").first.to_s.strip.downcase.split("-").first }
+        .find { |tag| Translatable::LOCALES.include?(tag) }
+    end
+
     def not_found
       render json: { error: "not_found" }, status: :not_found
     end

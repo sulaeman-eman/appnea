@@ -5,7 +5,7 @@ class InstructorBlueprint < Blueprinter::Base
 
   field :bio
   field :photo_url do |instructor|
-    instructor.photo.attached? ? Rails.application.routes.url_helpers.rails_blob_path(instructor.photo, only_path: true) : nil
+    instructor.photo_url
   end
 
   view :summary do

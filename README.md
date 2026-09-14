@@ -22,6 +22,7 @@ so the browser never holds the JWT.
 - [mise](https://mise.jdx.dev) — pins Ruby 3.3.12 via `mise.toml`
 - Node 24+
 - PostgreSQL 16 running locally, with a role matching your OS user
+- libvips, for image variants: `sudo apt-get install -y libvips42 libvips-tools`
 
 Docker is not used; services run natively.
 
@@ -71,8 +72,16 @@ cd web && npm run dev
 | `GET /api/auth/me` | the current user (requires a token) |
 | `GET/POST/DELETE /api/bookings` | the caller's own bookings |
 | `GET /api/schedules/:id` | one schedule, course embedded |
+| `GET /api/search?q=` | courses and articles, ranked |
 
 Responses are camelCase. Unpublished records 404 rather than render.
+
+### Languages
+
+Every read endpoint honours `?locale=en|id`, falling back to `Accept-Language`
+and then English. Course, trip and article text is translated in the database
+via a `translations` jsonb column; anything untranslated falls back to English
+per field, so a partly translated record still renders completely.
 
 ### Auth
 
@@ -86,7 +95,7 @@ Emails are written to `backend/tmp/mails` in development rather than sent.
 ## Test
 
 ```bash
-cd backend && mise exec -- bundle exec rspec    # 119 examples
+cd backend && mise exec -- bundle exec rspec    # 154 examples
 cd backend && mise exec -- bundle exec rubocop
 cd web && npm run typecheck
 cd web && npm run build                         # production SSR build

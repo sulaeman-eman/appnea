@@ -50,5 +50,11 @@ module Appnea
     config.middleware.use ActionDispatch::Flash
 
     config.time_zone = "Asia/Jakarta"
+
+    # Serve attachments through Rails rather than redirecting to the storage
+    # service. The redirect would send the browser straight at the Rails origin,
+    # which the Express layer otherwise keeps out of sight; proxying keeps every
+    # asset on the same origin as the page.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
   end
 end

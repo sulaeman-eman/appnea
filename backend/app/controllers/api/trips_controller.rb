@@ -5,14 +5,14 @@ module Api
       trips = paginate(scope)
 
       render json: {
-        trips: TripBlueprint.render_as_hash(trips),
+        trips: TripBlueprint.render_as_hash(trips, locale: current_locale),
         meta: meta_for(scope, trips)
       }
     end
 
     def show
       trip = Trip.published.find_by!(slug: params[:slug])
-      render json: { trip: TripBlueprint.render_as_hash(trip, view: :detail) }
+      render json: { trip: TripBlueprint.render_as_hash(trip, view: :detail, locale: current_locale) }
     end
   end
 end

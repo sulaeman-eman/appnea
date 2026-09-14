@@ -1,5 +1,9 @@
 class Trip < ApplicationRecord
-  has_one_attached :cover_image
+  include Translatable
+  include HasCoverImage
+
+  translates :title, :summary, :description, :destination
+
 
   before_validation :generate_slug, on: :create
 

@@ -8,10 +8,16 @@ export default function ArticlePage() {
   const article = (data as { article: ArticleDetail } | null)?.article
 
   if (error) return <ErrorState message={error} />
-  if (loading || !article) return <Loading what="article" />
+  if (loading || !article) return <Loading />
 
   return (
     <>
+      {article.coverImageUrl && (
+        <div className="hero-image">
+          <img src={article.coverImageUrl} alt="" />
+        </div>
+      )}
+
       <div className="page-head">
         <div className="wrap">
           <span className="tag">{article.category}</span>

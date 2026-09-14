@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router'
 import type { ReactElement } from 'react'
 import Layout from './components/Layout'
+import ErrorBoundary from './components/ErrorBoundary'
 import { routes } from './routes'
 import { useAuth } from './auth'
 
@@ -21,17 +22,23 @@ function RequireAuth({ children }: { children: ReactElement }) {
 }
 
 export default function App() {
+  const location = useLocation()
+
   return (
     <Layout>
-      <Routes>
-        {routes.map(({ path, Component, requiresAuth }) => (
-          <Route
-            key={path}
-            path={path}
-            element={requiresAuth ? <RequireAuth><Component /></RequireAuth> : <Component />}
-          />
-        ))}
-      </Routes>
+      {/* Scoped inside the layout so a crashing page keeps the header and the
+          visitor can navigate out of it. */}
+      <ErrorBoundary resetKey={location.pathname + location.search}>
+        <Routes>
+          {routes.map(({ path, Component, requiresAuth }) => (
+            <Route
+              key={path}
+              path={path}
+              element={requiresAuth ? <RequireAuth><Component /></RequireAuth> : <Component />}
+            />
+          ))}
+        </Routes>
+      </ErrorBoundary>
     </Layout>
   )
 }

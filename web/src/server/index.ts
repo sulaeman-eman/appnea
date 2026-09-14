@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { proxyToApi } from './proxy.js'
 import { login, signup, logout, readSessionToken } from './auth.js'
+import { resolveLocale } from './locale.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '../..')
@@ -15,12 +16,13 @@ const port = Number(process.env.PORT ?? 5173)
 interface RenderResult {
   html: string
   head: string
+  lang: string
   status: number
   redirect?: string
-  bootstrap: { url: string; data: unknown; error: string | null; user: unknown }
+  bootstrap: { key: string; data: unknown; error: string | null; user: unknown; locale: string }
 }
 
-type RenderFn = (url: string, token?: string | null) => Promise<RenderResult>
+type RenderFn = (url: string, options: { token?: string | null; locale?: string }) => Promise<RenderResult>
 
 /**
  * Serialises the SSR payload for a <script> tag.
@@ -49,6 +51,11 @@ async function createServer() {
 
   // Raw body so the proxy can forward JSON, forms, and uploads untouched.
   app.use('/api', express.raw({ type: '*/*', limit: '25mb' }), proxyToApi)
+
+  // Attachments are served by Rails in proxy mode, so their bytes come through
+  // here too. That keeps images on the page's own origin instead of pointing
+  // the browser at the Rails host.
+  app.use('/rails', proxyToApi)
 
   let template = ''
   let render: RenderFn | undefined
@@ -80,7 +87,10 @@ async function createServer() {
 
       if (!renderFn) throw new Error('SSR entry not loaded')
 
-      const rendered = await renderFn(req.originalUrl, readSessionToken(req))
+      const rendered = await renderFn(req.originalUrl, {
+        token: readSessionToken(req),
+        locale: resolveLocale(req),
+      })
 
       if (rendered.redirect) {
         res.redirect(302, rendered.redirect)
@@ -95,9 +105,15 @@ async function createServer() {
           // A page rendered for a signed-in visitor must never be reused for
           // anyone else by a proxy or CDN.
           'Cache-Control': rendered.bootstrap.user ? 'private, no-store' : 'no-cache',
+          // The same URL renders differently per language, so anything caching
+          // it has to key on the negotiated language too.
+          Vary: 'Cookie, Accept-Language',
         })
         .send(
           html
+            // The document language has to match what was actually rendered,
+            // for screen readers and for crawlers alike.
+            .replace('<html lang="en">', `<html lang="${rendered.lang}">`)
             .replace('<!--app-head-->', rendered.head)
             .replace('<!--app-html-->', rendered.html)
             .replace('<!--app-data-->', bootstrap),
