@@ -3,3 +3,7 @@
 .DS_Store
 /tmp/
 node_modules/
+
+# Dokumentasi dibuat lokal dan tidak ikut di-track.
+# Filenya tetap ada di disk, cuma tidak masuk repo.
+manual/
