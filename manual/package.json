@@ -1,0 +1,12 @@
+{
+  "name": "appnea-manual",
+  "private": true,
+  "type": "module",
+  "description": "Builds the printable HTML from the Markdown sources.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}

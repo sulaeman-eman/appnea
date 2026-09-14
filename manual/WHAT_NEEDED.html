@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What Needed — Persiapan Environment Appnea</title>
+<style>
+  :root {
+    --deep: #04283f;
+    --ink: #1a2b35;
+    --muted: #5d7383;
+    --line: #dde5ea;
+    --sand: #f5f2ec;
+    --accent: #0b7f79;
+    --code-bg: #f4f6f8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 24px 96px;
+    font-family: "Charter", "Georgia", "Iowan Old Style", serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink);
+    background: #fff;
+  }
+
+  main { max-width: 820px; margin: 0 auto; }
+
+  h1, h2, h3, h4 {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.25;
+    color: var(--deep);
+  }
+
+  h1 {
+    font-size: 2.1rem;
+    margin: 0 0 8px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  h2 {
+    font-size: 1.45rem;
+    margin: 48px 0 14px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  h3 { font-size: 1.12rem; margin: 30px 0 10px; }
+  h4 { font-size: 1rem; margin: 22px 0 8px; color: var(--muted); }
+
+  p { margin: 0 0 14px; }
+
+  a { color: var(--accent); }
+
+  code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    font-size: 0.86em;
+    background: var(--code-bg);
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    line-height: 1.55;
+  }
+
+  pre code { background: none; padding: 0; font-size: 0.82rem; }
+
+  blockquote {
+    margin: 18px 0;
+    padding: 12px 18px;
+    background: var(--sand);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+  }
+
+  blockquote p:last-child { margin-bottom: 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th { background: var(--sand); font-weight: 600; }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  figure { margin: 26px 0; }
+  figcaption {
+    text-align: center;
+    font-size: 0.86rem;
+    color: var(--muted);
+    margin-top: -8px;
+  }
+
+  ul, ol { margin: 0 0 14px; padding-left: 26px; }
+  li { margin-bottom: 6px; }
+
+  hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
+
+  .doc-footer {
+    margin-top: 64px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+
+  @media print {
+    body { padding: 0; font-size: 11.5pt; }
+    h1, h2, h3, h4 { break-after: avoid; }
+    pre, table, figure, img { break-inside: avoid; }
+    a { color: var(--ink); text-decoration: none; }
+    .doc-footer { display: none; }
+    @page { margin: 18mm 16mm; }
+  }
+</style>
+</head>
+<body>
+<main>
+<h1>What Needed — Persiapan Environment Appnea</h1>
+<p>Dokumen ini menjelaskan <strong>semua yang dibutuhkan supaya Appnea bisa jalan di
+mesin baru</strong>, plus alasan kenapa tiap bagian ada. Ditulis berdasarkan langkah
+yang benar-benar dijalankan waktu membangun aplikasi ini, termasuk beberapa
+masalah yang sempat menghadang dan cara menyelesaikannya.</p>
+<p>Kalau kamu cuma mau tahu <strong>cara memakai</strong> aplikasinya, baca <code>MANUAL.md</code>.</p>
+<hr>
+<h2>1. Gambaran besar dulu</h2>
+<p>Sebelum menginstall apa pun, penting paham aplikasi ini terdiri dari apa. Kalau
+tidak, daftar instalasi di bawah cuma terasa seperti mantra yang harus dihafal.</p>
+<pre><code>Browser
+   |
+   v
+Express (Node)  &lt;-- server-render React, pegang cookie sesi, teruskan /api/*
+   |
+   v
+Rails 8 (API)   &lt;-- semua logika bisnis, autentikasi, panel admin
+   |
+   v
+PostgreSQL 16   &lt;-- data
+</code></pre>
+<p>Tiga proses, tiga tanggung jawab:</p>
+<table>
+<thead>
+<tr>
+<th>Bagian</th>
+<th>Port</th>
+<th>Tugas</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PostgreSQL</td>
+<td>5432</td>
+<td>Menyimpan data</td>
+</tr>
+<tr>
+<td>Rails</td>
+<td>3000</td>
+<td>JSON API, autentikasi, panel admin Avo</td>
+</tr>
+<tr>
+<td>Express</td>
+<td>5173</td>
+<td>Render React di server, jadi perantara ke Rails</td>
+</tr>
+</tbody></table>
+<p><strong>Kenapa ada dua server aplikasi?</strong> Express <strong>tidak menyimpan logika bisnis sama
+sekali</strong>. Tugasnya cuma dua: merender React jadi HTML di server (supaya Google
+bisa membaca isi halaman), dan meneruskan panggilan API ke Rails sambil
+menukar cookie sesi menjadi header <code>Authorization</code>. Artinya token login tidak
+pernah sampai ke JavaScript di browser.</p>
+<p>Kalau Express juga menyimpan logika bisnis, akan ada dua sumber kebenaran dan
+keduanya pasti berbeda dalam waktu sebulan. Rails yang memutuskan segalanya.</p>
+<hr>
+<h2>2. Yang harus diinstall</h2>
+<h3>2.1 Ringkasan</h3>
+<table>
+<thead>
+<tr>
+<th>Kebutuhan</th>
+<th>Versi</th>
+<th>Untuk apa</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mise</td>
+<td>terbaru</td>
+<td>Mengunci versi Ruby per project</td>
+</tr>
+<tr>
+<td>Ruby</td>
+<td>3.3.12</td>
+<td>Bahasa yang dipakai Rails</td>
+</tr>
+<tr>
+<td>Rails</td>
+<td>8.1.x</td>
+<td>Framework backend</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>24.x</td>
+<td>Menjalankan Express dan build React</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>16</td>
+<td>Database</td>
+</tr>
+<tr>
+<td>libvips</td>
+<td>8.15+</td>
+<td>Memproses ukuran gambar</td>
+</tr>
+<tr>
+<td>Git</td>
+<td>apa saja</td>
+<td>Version control</td>
+</tr>
+</tbody></table>
+<h3>2.2 mise dan Ruby</h3>
+<p><strong>Masalahnya:</strong> mesin ini punya Ruby 2.6 bawaan sistem. Rails 8 butuh minimal
+Ruby 3.2. Mengganti Ruby sistem itu ide buruk — banyak perkakas OS bergantung
+padanya.</p>
+<p><strong>Solusinya:</strong> version manager. Kita pakai <a href="https://mise.jdx.dev">mise</a>, yang
+membaca file <code>mise.toml</code> di root project dan otomatis memakai Ruby yang benar
+begitu kamu masuk ke folder itu.</p>
+<pre><code class="language-bash"># Install mise (kalau belum ada)
+curl https://mise.run | sh
+
+# Install Ruby dan kunci versinya untuk project ini
+cd /path/ke/Appnea
+mise use ruby@3.3.12
+</code></pre>
+<p>File <code>mise.toml</code> di root project isinya cuma ini:</p>
+<pre><code class="language-toml">[tools]
+ruby = &quot;3.3.12&quot;
+</code></pre>
+<p>Karena versinya tertulis di dalam repo, siapa pun yang clone project ini dapat
+Ruby yang sama persis. Tidak ada lagi &quot;di laptop saya jalan kok&quot;.</p>
+<blockquote>
+<p><strong>Catatan dari proses pembangunan:</strong> awalnya kami install Ruby 3.4, tapi
+ternyata 3.3.12 sudah ada di mesin dan Rails 8 mendukungnya. Jadi kami pakai
+yang sudah ada — proses kompilasi Ruby memakan waktu 10+ menit, tidak perlu
+diulang tanpa alasan.</p>
+</blockquote>
+<p><strong>Kenapa harus <code>mise exec</code>?</strong> Semua perintah Ruby di project ini diawali
+<code>mise exec --</code>, misalnya <code>mise exec -- bin/rails server</code>. Itu memastikan
+perintahnya jalan pakai Ruby 3.3.12, bukan Ruby sistem. Kalau shell kamu sudah
+di-hook ke mise (<code>mise activate</code>), awalan itu tidak perlu.</p>
+<h3>2.3 Rails</h3>
+<pre><code class="language-bash">mise exec -- gem install rails -v &#39;~&gt; 8.0&#39;
+</code></pre>
+<p>Rails di-install sebagai gem, bukan lewat apt. Versi apt hampir selalu
+ketinggalan dan tidak menghormati version manager.</p>
+<p>Aplikasi ini dibuat dengan mode <strong>API-only</strong>:</p>
+<pre><code class="language-bash">rails new backend --api -d postgresql -T --skip-git --skip-kamal --skip-docker
+</code></pre>
+<p>Arti tiap flag:</p>
+<ul>
+<li><code>--api</code> — buang middleware dan generator yang cuma berguna untuk aplikasi
+full-stack. Frontend kita React, jadi Rails tidak perlu merender HTML.</li>
+<li><code>-d postgresql</code> — pakai PostgreSQL, bukan SQLite default.</li>
+<li><code>-T</code> — jangan pasang Minitest; kita pakai RSpec.</li>
+<li><code>--skip-docker</code>, <code>--skip-kamal</code> — Docker tidak terpasang di mesin ini.</li>
+</ul>
+<blockquote>
+<p><strong>Jebakan yang kami temui:</strong> <code>--skip-git</code> berarti Rails <strong>tidak membuat
+<code>.gitignore</code></strong>. Kami menulisnya manual, dan baris untuk <code>config/master.key</code>
+hampir terlewat. File itu adalah kunci utama aplikasi. Kalau ikut ter-commit,
+ia masuk riwayat Git selamanya. Selalu cek:</p>
+<pre><code class="language-bash">git check-ignore -v backend/config/master.key
+</code></pre>
+<p>Kalau perintah itu tidak menampilkan apa-apa, kuncimu belum aman.</p>
+</blockquote>
+<h3>2.4 Node.js</h3>
+<pre><code class="language-bash"># Lewat mise juga, supaya konsisten
+mise use node@24
+</code></pre>
+<p>Node dipakai untuk dua hal: menjalankan server Express, dan menjalankan Vite
+yang mem-bundle React.</p>
+<h3>2.5 PostgreSQL</h3>
+<pre><code class="language-bash">sudo apt-get install -y postgresql-16
+sudo systemctl start postgresql
+</code></pre>
+<p>Aplikasi terhubung lewat <strong>domain socket</strong> dengan <strong>peer authentication</strong>.
+Artinya: PostgreSQL percaya pada user sistem operasi kamu, tanpa password.
+Praktis untuk development, dan <code>config/database.yml</code> jadi bersih tanpa
+kredensial.</p>
+<p>Supaya itu bekerja, harus ada role PostgreSQL dengan nama sama seperti user
+Linux kamu, dan role itu harus boleh membuat database:</p>
+<pre><code class="language-bash">sudo -u postgres createuser --createdb $(whoami)
+</code></pre>
+<p>Cek berhasil atau tidak:</p>
+<pre><code class="language-bash">psql -d postgres -c &#39;\du&#39;
+</code></pre>
+<p>Nama user kamu harus muncul dengan atribut <code>Create DB</code>.</p>
+<h3>2.6 libvips</h3>
+<pre><code class="language-bash">sudo apt-get install -y libvips42 libvips-tools
+</code></pre>
+<p>Ini yang mengubah gambar yang diupload jadi berbagai ukuran. Active Storage
+punya dua pilihan pemroses gambar: libvips atau ImageMagick. Rails 8 memilih
+libvips secara default karena lebih cepat dan lebih hemat memori.</p>
+<p><strong>Tanpa ini, upload gambar tetap tersimpan tapi variannya gagal dibuat</strong>, jadi
+kartu di halaman katalog akan kosong. Gejalanya membingungkan karena upload-nya
+sendiri sukses.</p>
+<p>Cek terpasang:</p>
+<pre><code class="language-bash">vips --version          # harus keluar: vips-8.15.1 atau lebih baru
+</code></pre>
+<hr>
+<h2>3. Menjalankan aplikasi</h2>
+<h3>3.1 Sekali saja, saat pertama setup</h3>
+<pre><code class="language-bash">git clone &lt;repo&gt; Appnea
+cd Appnea
+
+# --- Backend ---
+cd backend
+mise exec -- bundle install
+mise exec -- bin/rails db:create db:migrate db:seed
+cp .env.example .env
+
+# --- Frontend ---
+cd ../web
+npm install
+</code></pre>
+<p><code>db:seed</code> mengisi database dengan 4 kursus, 2 instruktur, 12 jadwal, 2 trip,
+dan beberapa artikel — lengkap dengan terjemahan Indonesia dan gambar
+placeholder. Seed ini <strong>idempotent</strong>: aman dijalankan berkali-kali, tidak akan
+membuat duplikat.</p>
+<h3>3.2 Setiap hari</h3>
+<pre><code class="language-bash">bin/dev
+</code></pre>
+<p>Satu perintah dari root project, menjalankan Rails dan Express sekaligus.
+<code>Ctrl-C</code> mematikan keduanya.</p>
+<p>Isinya sederhana:</p>
+<pre><code class="language-bash">( cd &quot;$root/backend&quot; &amp;&amp; mise exec -- bin/rails server -p 3000 ) &amp;
+( cd &quot;$root/web&quot; &amp;&amp; npm run dev ) &amp;
+wait
+</code></pre>
+<p>Setelah jalan:</p>
+<table>
+<thead>
+<tr>
+<th>Alamat</th>
+<th>Isi</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="http://localhost:5173">http://localhost:5173</a></td>
+<td>Website publik</td>
+</tr>
+<tr>
+<td><a href="http://localhost:3000/admin/login">http://localhost:3000/admin/login</a></td>
+<td>Panel admin</td>
+</tr>
+<tr>
+<td><a href="http://localhost:3000/api/health">http://localhost:3000/api/health</a></td>
+<td>Cek API hidup atau tidak</td>
+</tr>
+</tbody></table>
+<p>Login bawaan dari seed, keduanya password <code>changeme123</code>:</p>
+<ul>
+<li><code>admin@appnea.test</code> — bisa masuk panel admin</li>
+<li><code>student@appnea.test</code> — user biasa, bisa booking</li>
+</ul>
+<h3>3.3 Kalau ada yang tidak jalan</h3>
+<table>
+<thead>
+<tr>
+<th>Gejala</th>
+<th>Kemungkinan penyebab</th>
+<th>Cara cek</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bin/rails</code> tidak ditemukan</td>
+<td>Ruby sistem yang kepakai</td>
+<td><code>mise exec -- ruby -v</code> harus 3.3.12</td>
+</tr>
+<tr>
+<td><code>PG::ConnectionBad</code></td>
+<td>PostgreSQL mati</td>
+<td><code>pg_isready</code></td>
+</tr>
+<tr>
+<td><code>FATAL: role does not exist</code></td>
+<td>Role belum dibuat</td>
+<td><code>sudo -u postgres createuser --createdb $(whoami)</code></td>
+</tr>
+<tr>
+<td>Halaman tampil tapi kosong isinya</td>
+<td>Rails mati, Express hidup</td>
+<td><code>curl localhost:3000/api/health</code></td>
+</tr>
+<tr>
+<td>Gambar tidak muncul</td>
+<td>libvips belum ada</td>
+<td><code>vips --version</code></td>
+</tr>
+<tr>
+<td>Admin panel error 500</td>
+<td>Lihat bagian 5.1 di bawah</td>
+<td><code>tail backend/log/development.log</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Anatomi project</h2>
+<pre><code>Appnea/
+├── mise.toml              # kunci versi Ruby
+├── bin/dev                # jalankan kedua server
+├── PLAN.md                # arsitektur dan riwayat keputusan
+├── README.md              # rujukan cepat
+├── manual/                # dokumen ini
+│
+├── backend/               # Rails 8 API-only
+│   ├── app/
+│   │   ├── models/        # Course, Schedule, Booking, User, ...
+│   │   │   └── concerns/  # Translatable, Searchable, HasCoverImage
+│   │   ├── controllers/
+│   │   │   └── api/       # endpoint JSON
+│   │   ├── blueprints/    # ubah model jadi JSON (Blueprinter)
+│   │   ├── services/      # Bookings::Create, Bookings::Cancel
+│   │   ├── avo/           # definisi tampilan panel admin
+│   │   └── mailers/       # email booking
+│   ├── config/
+│   │   ├── database.yml
+│   │   ├── routes.rb
+│   │   └── initializers/avo.rb
+│   ├── db/
+│   │   ├── migrate/       # riwayat perubahan struktur database
+│   │   ├── schema.rb      # bentuk database saat ini (jangan diedit manual)
+│   │   └── seeds.rb       # data contoh
+│   └── spec/              # 154 test RSpec
+│
+└── web/                   # Express + React + TypeScript
+    └── src/
+        ├── client/        # halaman React, routing, state
+        ├── server/        # Express, SSR, proxy ke Rails
+        ├── shared/        # tipe data dan pemanggil API
+        └── test/          # setup vitest
+</code></pre>
+<h3>4.1 Konsep Rails yang dipakai di sini</h3>
+<p>Kalau kamu baru di Rails, ini istilah yang paling sering muncul di project ini.</p>
+<p><strong>Model</strong> — satu class Ruby mewakili satu tabel database. <code>Course</code> mewakili
+tabel <code>courses</code>. Validasi, relasi antar tabel, dan aturan bisnis kecil tinggal
+di sini.</p>
+<p><strong>Migration</strong> — satu file yang menjelaskan satu perubahan struktur database.
+Dijalankan berurutan, dan tercatat di tabel <code>schema_migrations</code>. Jangan pernah
+mengubah migration yang sudah pernah jalan di mesin orang lain; buat migration
+baru.</p>
+<pre><code class="language-bash">mise exec -- bin/rails generate migration AddPhoneToUsers phone:string
+mise exec -- bin/rails db:migrate
+</code></pre>
+<p><strong>Controller</strong> — menerima request HTTP, memanggil model atau service, lalu
+mengembalikan JSON. Di project ini semuanya ada di <code>app/controllers/api/</code>.</p>
+<p><strong>Service object</strong> — kelas biasa untuk logika yang terlalu besar untuk model.
+<code>Bookings::Create</code> contohnya: ia mengambil kunci baris database, memeriksa sisa
+kursi, membuat booking, dan mengirim email. Kalau logika seperti itu ditaruh di
+controller, ia tidak bisa dipakai ulang dari panel admin.</p>
+<p><strong>Concern</strong> — modul yang bisa di-<code>include</code> ke beberapa model. <code>Translatable</code>
+dipakai Course, Trip, dan Article, jadi ketiganya dapat kemampuan terjemahan
+tanpa menyalin kode.</p>
+<p><strong>Blueprint (serializer)</strong> — menentukan model diubah jadi JSON seperti apa.
+Memisahkan bentuk database dari bentuk API, jadi mengganti nama kolom tidak
+otomatis merusak frontend.</p>
+<h3>4.2 Gem penting dan alasannya</h3>
+<table>
+<thead>
+<tr>
+<th>Gem</th>
+<th>Untuk apa</th>
+<th>Kenapa yang ini</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pg</code></td>
+<td>Driver PostgreSQL</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>bcrypt</code></td>
+<td>Hash password</td>
+<td>Standar <code>has_secure_password</code></td>
+</tr>
+<tr>
+<td><code>jwt</code></td>
+<td>Token API</td>
+<td>Stateless, cocok untuk API</td>
+</tr>
+<tr>
+<td><code>blueprinter</code></td>
+<td>Serializer JSON</td>
+<td>ActiveModelSerializers sudah tidak dirawat</td>
+</tr>
+<tr>
+<td><code>avo</code></td>
+<td>Panel admin</td>
+<td>Admin di sini murni CRUD; membuat sendiri tidak menambah nilai</td>
+</tr>
+<tr>
+<td><code>ransack</code></td>
+<td>Query pencarian admin</td>
+<td>Dibutuhkan Avo, tapi harus ditambah manual</td>
+</tr>
+<tr>
+<td><code>image_processing</code></td>
+<td>Varian gambar</td>
+<td>Jembatan ke libvips</td>
+</tr>
+<tr>
+<td><code>rspec-rails</code></td>
+<td>Testing</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>dotenv-rails</code></td>
+<td>Baca <code>.env</code></td>
+<td>Rails tidak membacanya sendiri</td>
+</tr>
+<tr>
+<td><code>json</code> (dikunci ~&gt; 2.9)</td>
+<td>Parsing JSON</td>
+<td>Lihat bagian 5.1</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Masalah nyata yang kami temui</h2>
+<p>Bagian ini bukan teori. Semua ini benar-benar terjadi saat membangun Appnea, dan
+kemungkinan besar akan kamu temui lagi kalau setup dari nol.</p>
+<h3>5.1 Gem <code>json</code> versi 3 merusak sesi Rails</h3>
+<p><strong>Gejala:</strong> panel admin balas 500 di browser, tapi <code>curl</code> bilang 200.</p>
+<p><strong>Penyebab:</strong> gem <code>json</code> 3.x menghapus argumen kedua dari <code>JSON.parse</code>, padahal
+ActiveSupport masih mengirimnya saat mendekripsi cookie sesi:</p>
+<pre><code>ArgumentError (wrong number of arguments (given 2, expected 1))
+  json (3.0.2) lib/json/common.rb:296:in `parse&#39;
+  activesupport (8.1.3.1) lib/active_support/json/decoding.rb:25:in `decode&#39;
+</code></pre>
+<p><strong>Kenapa curl lolos tapi browser gagal:</strong> curl tidak mengirim cookie. Browser
+mengirim, jadi jalur dekripsi sesi kena, dan crash.</p>
+<p><strong>Solusi:</strong> kunci versinya di <code>Gemfile</code>.</p>
+<pre><code class="language-ruby">gem &quot;json&quot;, &quot;~&gt; 2.9&quot;
+</code></pre>
+<p><strong>Pelajarannya:</strong> menguji dengan curl saja tidak cukup untuk apa pun yang
+melibatkan sesi. Kalau fitur menyangkut cookie, ujilah dengan cookie jar
+(<code>curl -c jar.txt -b jar.txt</code>) atau browser sungguhan.</p>
+<h3>5.2 Avo butuh <code>ransack</code>, tapi tidak memintanya</h3>
+<p><strong>Gejala:</strong> pencarian di panel admin balas 500 dengan pesan yang
+membingungkan — <code>ArgumentError: missing keyword: :label</code>.</p>
+<p><strong>Penyebab:</strong> Avo 4 memperlakukan <code>ransack</code> sebagai opsional, tapi blok search
+di resource memerlukannya. Lebih parah, penanganan error Avo sendiri punya bug
+yang menyembunyikan error aslinya (<code>NoMethodError: undefined method &#39;ransack&#39;</code>).</p>
+<p><strong>Solusi:</strong> tambahkan <code>gem &quot;ransack&quot;</code> ke Gemfile.</p>
+<p><strong>Pelajarannya:</strong> kalau pesan error terasa tidak nyambung dengan yang kamu
+kerjakan, curigai penanganan error-nya sendiri. Panggil kode yang bermasalah
+langsung dari <code>rails runner</code> untuk melihat error yang sebenarnya.</p>
+<h3>5.3 Avo di dalam aplikasi API-only</h3>
+<p>Mode <code>--api</code> membuang middleware cookie, session, dan flash. Avo butuh
+ketiganya. Kami mengembalikannya secara eksplisit di <code>config/application.rb</code>:</p>
+<pre><code class="language-ruby">config.middleware.use ActionDispatch::Cookies
+config.middleware.use ActionDispatch::Session::CookieStore, key: &quot;_appnea_admin&quot;
+config.middleware.use ActionDispatch::Flash
+</code></pre>
+<p>API JSON-nya sendiri tetap stateless dan pakai JWT. Sesi itu khusus admin.</p>
+<h3>5.4 Active Storage: mode redirect membocorkan origin Rails</h3>
+<p>Secara default, Active Storage membalas permintaan gambar dengan redirect ke
+storage service. Di arsitektur ini, redirect tersebut mengirim browser langsung
+ke <code>localhost:3000</code> — padahal seluruh desainnya justru menyembunyikan Rails di
+balik Express.</p>
+<p>Solusinya, ubah ke mode proxy:</p>
+<pre><code class="language-ruby">config.active_storage.resolve_model_to_route = :rails_storage_proxy
+</code></pre>
+<p>dan minta Express meneruskan <code>/rails/*</code> seperti ia meneruskan <code>/api/*</code>.</p>
+<h3>5.5 Halaman kosong sampai di-refresh</h3>
+<p><strong>Gejala:</strong> klik menu, halaman kosong. Tekan F5, isinya muncul.</p>
+<p><strong>Penyebab:</strong> saat berpindah halaman, React Router merender halaman baru
+sementara state masih memegang data halaman lama. Tiap halaman mengubah data itu
+ke bentuknya sendiri, jadi halaman Instructors membaca
+<code>payload.instructors.length</code> dari data courses — <code>undefined.length</code> — lalu
+melempar error. Tanpa error boundary, seluruh aplikasi ikut mati.</p>
+<p><strong>Kenapa refresh menyembuhkan:</strong> refresh melewati jalur SSR, yang memang
+memberi data yang benar sejak awal.</p>
+<p><strong>Solusi:</strong> provider sekarang memutuskan <strong>saat render</strong>, bukan di dalam
+<code>useEffect</code>, apakah data yang dipegang milik halaman yang sedang tampil. Router
+memasang halaman baru di commit yang sama dengan navigasi, jadi membersihkan
+data di effect itu sudah terlambat.</p>
+<p><strong>Pelajarannya:</strong> memverifikasi dengan <code>curl</code> tidak pernah bisa menemukan bug
+ini, karena curl selalu mengambil tiap URL dari nol — itu jalur SSR. Perpindahan
+antar halaman hanya terjadi di browser. Sekarang ada test vitest yang menirunya.</p>
+<h3>5.6 Overbooking dan kunci baris database</h3>
+<p>Ini bukan bug yang terjadi, tapi bug yang <strong>sengaja dicegah</strong>, dan cara
+membuktikannya menarik.</p>
+<p><code>Bookings::Create</code> mengambil kunci baris (<code>schedule.lock!</code>) sebelum menghitung
+sisa kursi. Untuk membuktikan kunci itu benar-benar diperlukan, kuncinya kami
+lepas sementara lalu jalankan test konkurensi: <strong>8 booking berhasil masuk ke
+jadwal berkapasitas 4</strong>.</p>
+<p>Yang menarik: constraint database <code>seats_taken &lt;= capacity</code> <strong>tidak menangkap
+ini</strong>. Setiap thread membaca <code>seats_taken</code> bernilai 0 lalu menulis 1, jadi
+angkanya tidak pernah melebihi kapasitas. Ini disebut <em>lost update</em>. Kuncinya
+yang menyelamatkan, constraint cuma jaring pengaman kedua.</p>
+<p><strong>Pelajarannya:</strong> test konkurensi yang tidak pernah bisa gagal itu tidak ada
+gunanya. Lepas dulu pengamannya, pastikan test-nya merah, baru pasang lagi.</p>
+<hr>
+<h2>6. Menjalankan test</h2>
+<pre><code class="language-bash"># Backend: 154 contoh
+cd backend &amp;&amp; mise exec -- bundle exec rspec
+
+# Backend: pemeriksa gaya penulisan kode
+cd backend &amp;&amp; mise exec -- bundle exec rubocop
+
+# Frontend: 6 test, fokus ke navigasi antar halaman
+cd web &amp;&amp; npm test
+
+# Frontend: pemeriksa tipe
+cd web &amp;&amp; npx tsc --noEmit
+
+# Frontend: build produksi
+cd web &amp;&amp; npm run build
+</code></pre>
+<p>Jalankan semuanya sebelum commit. Kalau ada satu saja yang merah, jangan commit.</p>
+<hr>
+<h2>7. Perintah yang paling sering dipakai</h2>
+<pre><code class="language-bash"># Console Rails: coba-coba query dan model secara langsung
+mise exec -- bin/rails console
+
+# Lihat semua route yang terdaftar
+mise exec -- bin/rails routes
+
+# Buat migration baru
+mise exec -- bin/rails generate migration NamaPerubahannya
+
+# Jalankan migration
+mise exec -- bin/rails db:migrate
+
+# Batalkan migration terakhir
+mise exec -- bin/rails db:rollback
+
+# Reset database dari nol lalu isi ulang seed
+mise exec -- bin/rails db:drop db:create db:migrate db:seed
+
+# Jalankan satu baris kode di dalam aplikasi
+mise exec -- bin/rails runner &#39;puts Course.published.count&#39;
+
+# Lihat log
+tail -f backend/log/development.log
+</code></pre>
+<hr>
+<h2>8. Kalau nanti mau deploy</h2>
+<p>Belum dikerjakan, tapi ini yang perlu disiapkan:</p>
+<ol>
+<li><strong><code>SECRET_KEY_BASE</code></strong> — kunci penandatangan JWT diturunkan dari sini.
+Berbeda per environment, tidak boleh masuk repo.</li>
+<li><strong><code>config/master.key</code></strong> — kirim lewat jalur aman, jangan lewat Git.</li>
+<li><strong><code>DATABASE_URL</code></strong> — production tidak memakai peer authentication.</li>
+<li><strong><code>CORS_ORIGINS</code></strong> — isi dengan domain asli.</li>
+<li><strong>Cookie <code>secure</code></strong> — sudah otomatis aktif saat <code>NODE_ENV=production</code>, jadi
+HTTPS itu wajib, bukan pilihan.</li>
+<li><strong>Storage</strong> — <code>config/storage.yml</code> sekarang menulis ke disk lokal. Di
+production sebaiknya S3 atau sejenisnya.</li>
+<li><strong>Email</strong> — development menulis ke <code>tmp/mails</code>. Production perlu SMTP asli.</li>
+<li><strong>Solid Queue</strong> — email dikirim lewat background job, jadi <code>bin/jobs</code> harus
+ikut berjalan.</li>
+</ol>
+<hr>
+<h2>9. Bacaan lanjutan</h2>
+<ul>
+<li><a href="https://guides.rubyonrails.org/">Rails Guides</a> — dokumentasi resmi, mulai
+dari &quot;Getting Started&quot; dan &quot;Active Record Basics&quot;.</li>
+<li><a href="https://docs.avohq.io">Dokumentasi Avo</a> — panel admin.</li>
+<li><a href="https://vite.dev/guide/ssr">Dokumentasi Vite</a> — bagian server-side rendering.</li>
+<li><code>PLAN.md</code> di root project — arsitektur dan alasan tiap keputusan diambil.</li>
+</ul>
+
+<p class="doc-footer">Appnea &mdash; dibuat dari <code>What Needed — Persiapan Environment Appnea</code>. Untuk PDF: buka di browser lalu Print &rarr; Save as PDF.</p>
+</main>
+</body>
+</html>
